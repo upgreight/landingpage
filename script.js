@@ -776,7 +776,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   
     function checkNavVisibility() {
-      const threshold = window.innerHeight * 0.8;
+      const isMobile = window.innerWidth < 992;
+      const threshold = window.innerHeight * (isMobile ? 0.4 : 0.8);
       const shouldShow = window.scrollY >= threshold;
       if (shouldShow !== navVisible) {
         if (shouldShow) {
