@@ -1,3 +1,15 @@
+// Zentrale Swiper Animation Konfiguration
+const swiperAnimationConfig = {
+  speed: 800,
+  on: {
+    init: function() {
+      this.slides.forEach(slide => {
+        slide.style.transitionTimingFunction = 'cubic-bezier(0.34, 1.8, 0.64, 1)';
+      });
+    }
+  }
+};
+
 // Hero Heading Animation
 document.addEventListener('DOMContentLoaded', () => {
     const headingWrapper = document.querySelector('.hero_heading-wrapper');
@@ -592,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Swiper Topics
+  // Topic Swiper
   document.addEventListener("DOMContentLoaded", function () {
     window.topicSwiper = new Swiper('.swiper.is-topic', {
       slidesPerView: 2.5,
@@ -976,6 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   
     window.gallerySwiper = new Swiper('.swiper.is-gallery', {
+      ...swiperAnimationConfig,
       slidesPerView: 1.2,
       spaceBetween: 16,
       centeredSlides: false,
@@ -1131,6 +1144,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!container) return;
   
       currentSwiper = new Swiper(container, {
+        ...swiperAnimationConfig,
         autoHeight: false,
         slidesPerView: 1.2,
         spaceBetween: 16,
@@ -1257,6 +1271,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!container) return;
   
       currentSwiper = new Swiper(container, {
+        ...swiperAnimationConfig,
         autoHeight: false,
         slidesPerView: 1.2,
         spaceBetween: 16,
@@ -1311,6 +1326,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Swiper Social Media Reviews
   document.addEventListener("DOMContentLoaded", function () {
     const swiper = new Swiper('.swiper.is-sm-reviews', {
+      ...swiperAnimationConfig,
       autoHeight: false,
       slidesPerView: 1.2,
       centeredSlides: true,
