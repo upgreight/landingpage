@@ -1148,17 +1148,17 @@ document.addEventListener('DOMContentLoaded', () => {
         autoHeight: false,
         slidesPerView: 1.2,
         spaceBetween: 16,
-        rewind: true,
+        rewind: false,
         navigation: {
           nextEl: '.rooms_next-btn',
           prevEl: '.rooms_prev-btn',
         },
-        pagination: container.querySelector('.rooms_bullets-wrapper') ? {
+        pagination: {
           el: '.rooms_bullets-wrapper',
           clickable: true,
           bulletClass: 'rooms_bullet',
           bulletActiveClass: 'is-current',
-        } : false,
+        },
         keyboard: {
           enabled: true,
           onlyInViewport: true,
@@ -1275,17 +1275,17 @@ document.addEventListener('DOMContentLoaded', () => {
         autoHeight: false,
         slidesPerView: 1.2,
         spaceBetween: 16,
-        rewind: true,
+        rewind: false,
         navigation: {
           nextEl: '.offers_next-btn',
           prevEl: '.offers_prev-btn',
         },
-        pagination: container.querySelector('.offers_bullets-wrapper') ? {
+        pagination: {
           el: '.offers_bullets-wrapper',
           clickable: true,
           bulletClass: 'offers_bullet',
           bulletActiveClass: 'is-current',
-        } : false,
+        },
         keyboard: {
           enabled: true,
           onlyInViewport: true,
