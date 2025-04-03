@@ -762,29 +762,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let navVisible = false;
   
     function showNav() {
-      gsap.to(navBg, {
-        duration: 0.5,
-        opacity: 1,
-        onStart: () => { navBg.style.display = "block"; }
-      });
-      gsap.to(navMenu, {
-        duration: 0.5,
-        opacity: 1,
-        onStart: () => { navMenu.style.display = "flex"; }
-      });
+      navBg.classList.add('is-active');
+      navMenu.classList.add('is-active');
     }
   
     function hideNav() {
-      gsap.to(navBg, {
-        duration: 0.5,
-        opacity: 0,
-        onComplete: () => { navBg.style.display = "none"; }
-      });
-      gsap.to(navMenu, {
-        duration: 0.5,
-        opacity: 0,
-        onComplete: () => { navMenu.style.display = "none"; }
-      });
+      navBg.classList.remove('is-active');
+      navMenu.classList.remove('is-active');
     }
   
     function checkNavVisibility() {
