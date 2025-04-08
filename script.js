@@ -668,26 +668,6 @@ document.addEventListener('DOMContentLoaded', () => {
           topicSlides[0].setAttribute('aria-selected', 'true');
         }
       }
-      
-      // Korrektur für andere Swiper (Karussells/Galerien)
-      const otherWrappers = document.querySelectorAll('.swiper-wrapper:not(.is-topic)');
-      otherWrappers.forEach(wrapper => {
-        // Für Karussells ist role="group" besser als role="list"
-        if (wrapper.getAttribute('role') === 'list') {
-          wrapper.setAttribute('role', 'region');
-          wrapper.setAttribute('aria-roledescription', 'carousel');
-        }
-        
-        // Slides in Karussells sind besser als role="group" oder role="presentation"
-        const slides = wrapper.querySelectorAll('.swiper-slide');
-        slides.forEach(slide => {
-          if (slide.getAttribute('role') === 'group') {
-            slide.setAttribute('role', 'group');
-            slide.setAttribute('aria-roledescription', 'slide');
-            // Wir behalten alle aria-label der Slides bei (wie "1/6")
-          }
-        });
-      });
     }
 
     window.topicSwiper = new Swiper('.swiper.is-topic', {
@@ -825,15 +805,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       window.gallerySwiper.slideTo(targetIndex);
+      
+      // Verbesserte Handling von gallery_tabs Elementen
       const galleryTabs = document.querySelectorAll('.gallery_tabs');
       galleryTabs.forEach(tab => {
+        // Visuelles Feedback - is-custom-current Klasse
         tab.classList.remove('is-custom-current');
         const tabTopic = (tab.getAttribute('data-topic-target') || tab.getAttribute('data-gallery-id') || "").toLowerCase();
         if (tabTopic === selectedTopic) {
           tab.classList.add('is-custom-current');
-          tab.setAttribute('aria-selected', 'true');
+        }
+        
+        // Suche das übergeordnete Element mit role="tab", falls vorhanden
+        const parentTab = tab.closest('[role="tab"]');
+        if (parentTab) {
+          // Setze aria-selected auf dem korrekten Tab-Element
+          parentTab.setAttribute('aria-selected', tabTopic === selectedTopic ? 'true' : 'false');
+          // Entferne aria-selected vom Kind-Element, um Konflikte zu vermeiden
+          tab.removeAttribute('aria-selected');
         } else {
-          tab.setAttribute('aria-selected', 'false');
+          // Fallback: Wenn kein übergeordnetes Tab-Element gefunden wurde
+          tab.setAttribute('aria-selected', tabTopic === selectedTopic ? 'true' : 'false');
         }
       });
       return true;
@@ -1158,41 +1150,11 @@ document.addEventListener('DOMContentLoaded', () => {
       tabList.setAttribute('role', 'tablist');
     }
   
-    tabs.forEach(tab => {
-      tab.setAttribute('role', 'tab');
-      tab.setAttribute('aria-selected', 'false');
-    });
-    tabContents.forEach(panel => {
-      panel.setAttribute('role', 'tabpanel');
-      panel.setAttribute('aria-hidden', 'true');
-    });
-  
-    function isContentEmpty(panel) {
-      const text = panel.textContent.trim().toLowerCase();
-      if (text.includes('no items found') || !panel.children.length) {
-        return true;
-      }
-      return false;
-    }
-  
-    tabs.forEach(tab => {
-      const tabId = tab.getAttribute('data-tab');
-      const panel = roomsSection.querySelector(`[data-target-tab="${tabId}"]`);
-      if (!panel || isContentEmpty(panel)) {
-        tab.remove();
-        if (panel) panel.remove();
-      }
-    });
-  
-    tabs = roomsSection.querySelectorAll('[data-tab]');
-    tabContents = roomsSection.querySelectorAll('[data-target-tab]');
-  
     let currentSwiper = null;
   
     function setActiveTab(tabId) {
       tabs.forEach(tab => {
         tab.classList.remove('is-custom-current');
-        tab.setAttribute('aria-selected', 'false');
       });
       tabContents.forEach(content => {
         content.classList.add('hide');
@@ -1204,7 +1166,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!activeTab) return;
   
       activeTab.classList.add('is-custom-current');
-      activeTab.setAttribute('aria-selected', 'true');
       if (activeContent) {
         activeContent.classList.remove('hide');
         activeContent.setAttribute('aria-hidden', 'false');
@@ -1285,41 +1246,11 @@ document.addEventListener('DOMContentLoaded', () => {
       tabList.setAttribute('role', 'tablist');
     }
   
-    tabs.forEach(tab => {
-      tab.setAttribute('role', 'tab');
-      tab.setAttribute('aria-selected', 'false');
-    });
-    tabContents.forEach(panel => {
-      panel.setAttribute('role', 'tabpanel');
-      panel.setAttribute('aria-hidden', 'true');
-    });
-  
-    function isContentEmpty(panel) {
-      const text = panel.textContent.trim().toLowerCase();
-      if (text.includes('no items found') || !panel.children.length) {
-        return true;
-      }
-      return false;
-    }
-  
-    tabs.forEach(tab => {
-      const tabId = tab.getAttribute('data-tab');
-      const panel = offersSection.querySelector(`[data-target-tab="${tabId}"]`);
-      if (!panel || isContentEmpty(panel)) {
-        tab.remove();
-        if (panel) panel.remove();
-      }
-    });
-  
-    tabs = offersSection.querySelectorAll('[data-tab]');
-    tabContents = offersSection.querySelectorAll('[data-target-tab]');
-  
     let currentSwiper = null;
   
     function setActiveTab(tabId) {
       tabs.forEach(tab => {
         tab.classList.remove('is-custom-current');
-        tab.setAttribute('aria-selected', 'false');
       });
       tabContents.forEach(content => {
         content.classList.add('hide');
@@ -1331,7 +1262,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!activeTab) return;
   
       activeTab.classList.add('is-custom-current');
-      activeTab.setAttribute('aria-selected', 'true');
       if (activeContent) {
         activeContent.classList.remove('hide');
         activeContent.setAttribute('aria-hidden', 'false');
@@ -1725,18 +1655,130 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ARIA-Rollen für Zimmer/Angebote korrigieren (listitem zu tab)
+  
+  // Zentrale ARIA-Korrekturen für bessere Barrierefreiheit und Wartbarkeit
   document.addEventListener("DOMContentLoaded", function() {
-    // Korrigiere alle Role="listitem" in tablist-Containern zu Role="tab"
-    document.querySelectorAll('[role="tablist"]').forEach(tablist => {
-      // Finde alle listitem-Elemente und konvertiere sie zu tab
-      tablist.querySelectorAll('[role="listitem"]').forEach(item => {
-        item.setAttribute('role', 'tab');
+    /**
+     * Hilfsfunktionen zur konsistenten Verwaltung von ARIA-Attributen
+     * - Effizienter als mehrere separate Event-Listener
+     * - Zentralisiert die ARIA-Korrekturen an einer Stelle
+     * - Spart Code durch Wiederverwendung von Funktionen
+     */
+    const ARIAHelper = {
+      /**
+       * Setzt ARIA-Rolle für Elemente, die einem Selektor entsprechen
+       * @param {string} selector - CSS-Selektor
+       * @param {string} role - Die zu setzende ARIA-Rolle
+       * @param {Object} attributes - Zusätzliche ARIA-Attribute als Key-Value-Paare
+       */
+      setRole: function(selector, role, attributes = {}) {
+        const elements = document.querySelectorAll(selector);
+        if (elements.length === 0) return;
         
-        // Minimale Korrektur: Stelle sicher, dass jedes Tab ein aria-selected Attribut hat
-        if (!item.hasAttribute('aria-selected')) {
-          item.setAttribute('aria-selected', 'false');
-        }
-      });
-    });
+        elements.forEach(el => {
+          el.setAttribute('role', role);
+          Object.entries(attributes).forEach(([key, value]) => {
+            el.setAttribute(key, value);
+          });
+        });
+      },
+      
+      /**
+       * Korrigiert Tab-bezogene ARIA-Attribute
+       * @param {string} tablistSelector - Selektor für Tablist-Container
+       * @param {string} tabSelector - Selektor für einzelne Tabs innerhalb der Tablist
+       */
+      setupTablist: function(tablistSelector, tabSelector) {
+        const tablists = document.querySelectorAll(tablistSelector);
+        if (tablists.length === 0) return;
+        
+        tablists.forEach(list => {
+          // Setze role="tablist" für den Container
+          list.setAttribute('role', 'tablist');
+          
+          // Finde alle Tabs und setze korrekte ARIA-Attribute
+          const tabs = list.querySelectorAll(tabSelector);
+          tabs.forEach(tab => {
+            // Setze role="tab" für das Tab-Element
+            tab.setAttribute('role', 'tab');
+            
+            // Prüfe, ob ein Kind-Element das aria-selected Attribut hat
+            const childWithSelected = tab.querySelector('[aria-selected]');
+            
+            if (childWithSelected) {
+              // Das Kind hat aria-selected - kopiere den Wert auf das Tab-Element
+              const isSelected = childWithSelected.getAttribute('aria-selected') === 'true';
+              tab.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+              
+              // Entferne redundantes Attribut vom Kind
+              childWithSelected.removeAttribute('aria-selected');
+            } 
+            else if (!tab.hasAttribute('aria-selected')) {
+              // Tab hat noch kein aria-selected - setze es auf false
+              tab.setAttribute('aria-selected', 'false');
+            }
+            
+            // Überprüfe, ob die aktive Klasse auf einem Kind-Element statt auf dem Tab ist
+            const childWithActiveClass = tab.querySelector('.is-custom-current');
+            
+            if (childWithActiveClass && childWithActiveClass !== tab) {
+              // Verschiebe die Klasse vom Kind zum Tab-Element
+              tab.classList.add('is-custom-current');
+              childWithActiveClass.classList.remove('is-custom-current');
+              
+              // Setze aria-selected auf true für das aktive Tab
+              tab.setAttribute('aria-selected', 'true');
+            }
+          });
+        });
+      },
+      
+      /**
+       * Korrigiert Swiper-Karussells für ARIA-Konformität
+       * @param {string} wrapperSelector - Selektor für Swiper-Wrapper 
+       * @param {string} slideSelector - Selektor für Slides innerhalb des Wrappers
+       */
+      setupCarousel: function(wrapperSelector, slideSelector) {
+        const wrappers = document.querySelectorAll(wrapperSelector);
+        if (wrappers.length === 0) return;
+        
+        wrappers.forEach(wrapper => {
+          // Für Karussells ist role="region" semantisch korrekter als role="list"
+          if (wrapper.getAttribute('role') === 'list') {
+            wrapper.setAttribute('role', 'region');
+            wrapper.setAttribute('aria-roledescription', 'carousel');
+          }
+          
+          // Slides in Karussells sollten role="group" haben
+          const slides = wrapper.querySelectorAll(slideSelector);
+          slides.forEach(slide => {
+            if (slide.getAttribute('role') !== 'tab') { // Bewahre Tabs-Funktionalität
+              slide.setAttribute('role', 'group');
+              slide.setAttribute('aria-roledescription', 'slide');
+            }
+          });
+        });
+      }
+    };
+
+    // Anwendung der Hilfsfunktionen auf spezifische Elemente
+    
+    // 1. Tab-Listen korrekt einrichten
+    ARIAHelper.setupTablist(
+      '.gallery_tabs-collection-list, .rooms_tabs-list, .offers_tabs-list',
+      '[role="listitem"], .gallery_tabs-collection-item, [class*="tab-item"]'
+    );
+    
+    // 2. Korrigiere explizit listitem zu tab in bestehenden tablists (ersetzt den separaten Event-Listener)
+    ARIAHelper.setupTablist('[role="tablist"]', '[role="listitem"]');
+    
+    // 3. Spezifische Behandlung für Topic-Filter (Tabs)
+    ARIAHelper.setRole('.swiper-wrapper.is-topic', 'tablist');
+    ARIAHelper.setRole('.swiper-wrapper.is-topic .swiper-slide', 'tab');
+    
+    // 4. Karussells/Galerien korrekt einrichten
+    ARIAHelper.setupCarousel(
+      '.swiper-wrapper:not(.is-topic)',
+      '.swiper-slide'
+    );
   });
