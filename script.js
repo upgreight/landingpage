@@ -542,25 +542,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('DOMContentLoaded', function() {
     const topicButtons = document.querySelectorAll('.topic_button[data-topic]');
     topicButtons.forEach(button => {
-      button.setAttribute('aria-selected', 'false');
       button.addEventListener('click', function() {
         topicButtons.forEach(btn => {
           btn.classList.remove('is-active');
-          btn.setAttribute('aria-selected', 'false');
-
+          
           const parentSlide = btn.closest('.swiper-slide');
           if (parentSlide) {
             parentSlide.setAttribute('aria-selected', 'false');
           }
         });
         button.classList.add('is-active');
-        button.setAttribute('aria-selected', 'true');
-
+        
         const parentSlide = button.closest('.swiper-slide');
         if (parentSlide) {
           parentSlide.setAttribute('aria-selected', 'true');
         }
-
+        
         const topic = button.getAttribute('data-topic').toLowerCase();
         const evt = new CustomEvent('topicChange', { detail: { topic, manual: true } });
         document.dispatchEvent(evt);
@@ -581,7 +578,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const btnTopic = btn.getAttribute('data-topic').toLowerCase();
       if (btnTopic === defaultTopic) {
         btn.classList.add('is-active');
-        btn.setAttribute('aria-selected', 'true');
         
         const parentSlide = btn.closest('.swiper-slide');
         if (parentSlide) {
@@ -597,7 +593,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
       } else {
         btn.classList.remove('is-active');
-        btn.setAttribute('aria-selected', 'false');
         
         const parentSlide = btn.closest('.swiper-slide');
         if (parentSlide) {
@@ -1728,4 +1723,20 @@ document.addEventListener('DOMContentLoaded', () => {
       
       return false;
     }
+  });
+
+  // ARIA-Rollen für Zimmer/Angebote korrigieren (listitem zu tab)
+  document.addEventListener("DOMContentLoaded", function() {
+    // Korrigiere alle Role="listitem" in tablist-Containern zu Role="tab"
+    document.querySelectorAll('[role="tablist"]').forEach(tablist => {
+      // Finde alle listitem-Elemente und konvertiere sie zu tab
+      tablist.querySelectorAll('[role="listitem"]').forEach(item => {
+        item.setAttribute('role', 'tab');
+        
+        // Minimale Korrektur: Stelle sicher, dass jedes Tab ein aria-selected Attribut hat
+        if (!item.hasAttribute('aria-selected')) {
+          item.setAttribute('aria-selected', 'false');
+        }
+      });
+    });
   });
