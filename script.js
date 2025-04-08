@@ -627,6 +627,48 @@ const swiperAnimationConfig = {
     
     // Topic Swiper
     document.addEventListener("DOMContentLoaded", function () {
+      // ARIA-Rollen für alle Swiper korrigieren
+      function correctSwiperARIARoles() {
+        // Korrektur für den Topic-Filter (Tabs)
+        const topicWrapper = document.querySelector('.swiper-wrapper.is-topic');
+        if (topicWrapper) {
+          // Topic Filter braucht ein Tablist/Tab Modell
+          topicWrapper.setAttribute('role', 'tablist');
+          
+          const topicButtons = document.querySelectorAll('.topic_button');
+          topicButtons.forEach(button => {
+            button.setAttribute('role', 'tab');
+            // aria-selected wird bereits durch den Topic Change Listener gesetzt
+          });
+          
+          // Die Slides selbst sind nur Container und sollten keine semantische Rolle haben
+          const topicSlides = topicWrapper.querySelectorAll('.swiper-slide');
+          topicSlides.forEach(slide => {
+            slide.setAttribute('role', 'presentation');
+          });
+        }
+        
+        // Korrektur für andere Swiper (Karussells/Galerien)
+        const otherWrappers = document.querySelectorAll('.swiper-wrapper:not(.is-topic)');
+        otherWrappers.forEach(wrapper => {
+          // Für Karussells ist role="group" besser als role="list"
+          if (wrapper.getAttribute('role') === 'list') {
+            wrapper.setAttribute('role', 'region');
+            wrapper.setAttribute('aria-roledescription', 'carousel');
+          }
+          
+          // Slides in Karussells sind besser als role="group" oder role="presentation"
+          const slides = wrapper.querySelectorAll('.swiper-slide');
+          slides.forEach(slide => {
+            if (slide.getAttribute('role') === 'group') {
+              slide.setAttribute('role', 'group');
+              slide.setAttribute('aria-roledescription', 'slide');
+              // Wir behalten alle aria-label der Slides bei (wie "1/6")
+            }
+          });
+        });
+      }
+
       window.topicSwiper = new Swiper('.swiper.is-topic', {
         slidesPerView: 2.5,
         spaceBetween: 0,
@@ -650,7 +692,15 @@ const swiperAnimationConfig = {
             slidesPerView: 4,
           },
         },
+        on: {
+          init: correctSwiperARIARoles,
+          // Falls Swiper die Rollen bei Updates zurücksetzt
+          update: correctSwiperARIARoles
+        }
       });
+      
+      // Verzögerter Check für den Fall, dass Swiper die Attribute nach der Initialisierung überschreibt
+      setTimeout(correctSwiperARIARoles, 1000);
     });
     
     
