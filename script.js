@@ -1,6 +1,8 @@
-// Zentrale Swiper Animation Konfiguration
+/******************************************************************************
+ * ZENTRALE SWIPER ANIMATION KONFIGURATION
+ *****************************************************************************/
 const swiperAnimationConfig = {
-  speed: 800,
+  speed: 700,
   on: {
     init: function() {
       this.slides.forEach(slide => {
@@ -9,66 +11,12 @@ const swiperAnimationConfig = {
     }
   }
 };
-
-// Hero Heading Animation
-document.addEventListener('DOMContentLoaded', () => {
-    const headingWrapper = document.querySelector('.hero_heading-wrapper');
-    if (!headingWrapper) return;
-  
-    const heading = headingWrapper.querySelector('.heading-style-h1');
-    if (!heading) return;
-  
-    heading.style.visibility = 'hidden';
-    heading.style.opacity = 0;
-  
-    const staggerEls = heading.querySelectorAll('.hero_heading-stagger');
-  
-    // Jedes Stagger-Element mit einzelnen Wörtern vorbereiten
-    staggerEls.forEach(staggerEl => {
-      const text = staggerEl.textContent.trim();
-      // Text in Wörter aufteilen und jedes Wort mit einem span umgeben
-      const words = text.split(' ');
-      staggerEl.innerHTML = '';
-      
-      words.forEach((word, index) => {
-        const wordSpan = document.createElement('span');
-        wordSpan.classList.add('hero_heading-word');
-        wordSpan.style.opacity = '0';
-        wordSpan.style.transform = 'translateY(16px)';
-        wordSpan.style.display = 'inline-block';
-        wordSpan.textContent = word;
-        staggerEl.appendChild(wordSpan);
-        
-        // Füge ein Leerzeichen zwischen den Wörtern hinzu (außer beim letzten Wort)
-        if (index < words.length - 1) {
-          staggerEl.appendChild(document.createTextNode(' '));
-        }
-      });
-    });
-  
-    const wordElements = heading.querySelectorAll('.hero_heading-word');
-  
-    const tl = gsap.timeline({
-      defaults: {
-        duration: 1.2,
-        ease: 'power2.out'
-      },
-      delay: 0.4
-    });
-  
-    tl.set(heading, { autoAlpha: 1 });
-  
-    tl.to(wordElements, {
-      autoAlpha: 1,
-      y: 0,
-      stagger: 0.08, // Schnellere Stagger-Zeit für einzelne Wörter
-      duration: 0.8 // Kürzere Duration für flüssigere Animation
-    }, 0);
-  });
   
   
-  // Date Picker and Form Setup
-  document.addEventListener('DOMContentLoaded', function() {
+/******************************************************************************
+ * DATE PICKER & FORM SETUP
+ *****************************************************************************/
+document.addEventListener('DOMContentLoaded', function() {
   
     let heroSelectedDates = [];
     let heroAdultsCount = 2;
@@ -470,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return { isFormValid, firstErrorElement };
       }
       myForm.action = "https://form.taxi/s/hao3m8ab";
-      const thankYouURL = "https://upgreight-landingpage.webflow.io/danke";
+      const thankYouURL = window.location.origin + "/danke";
       myForm.addEventListener("submit", function(e) {
         e.preventDefault();
         const { isFormValid, firstErrorElement } = validateRequiredFields(true);
@@ -538,73 +486,94 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Topic Buttons & Default Setup
-  document.addEventListener('DOMContentLoaded', function() {
-    const topicButtons = document.querySelectorAll('.topic_button[data-topic]');
-    topicButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        topicButtons.forEach(btn => {
+/******************************************************************************
+ * TOPIC BUTTONS & DEFAULT SETUP
+ *****************************************************************************/
+document.addEventListener('DOMContentLoaded', function() {
+    // Trigger-Elemente (Ebene 3) - diese enthalten eigentlich die Klickfunktionalität
+    const topicTriggers = document.querySelectorAll('.topic_button[data-topic]');
+    
+    // Tab-Elemente (Ebene 2) - diese sollten role="tab" haben
+    const topicTabItems = Array.from(topicTriggers).map(trigger => trigger.closest('.swiper-slide'));
+    
+    topicTriggers.forEach(trigger => {
+      trigger.addEventListener('click', function() {
+        // Visuelles Feedback für Trigger zurücksetzen
+        topicTriggers.forEach(btn => {
           btn.classList.remove('is-active');
-          
-          const parentSlide = btn.closest('.swiper-slide');
-          if (parentSlide) {
-            parentSlide.setAttribute('aria-selected', 'false');
+        });
+        
+        // ARIA-Attribute auf Tab-Elementen zurücksetzen
+        topicTabItems.forEach(tabItem => {
+          if (tabItem) {
+            tabItem.setAttribute('aria-selected', 'false');
           }
         });
-        button.classList.add('is-active');
         
-        const parentSlide = button.closest('.swiper-slide');
-        if (parentSlide) {
-          parentSlide.setAttribute('aria-selected', 'true');
+        // Visuelles Feedback für aktiven Trigger
+        trigger.classList.add('is-active');
+        
+        // ARIA-Attribute für übergeordnetes Tab-Element setzen
+        const parentTabItem = trigger.closest('.swiper-slide');
+        if (parentTabItem) {
+          parentTabItem.setAttribute('aria-selected', 'true');
         }
         
-        const topic = button.getAttribute('data-topic').toLowerCase();
+        const topic = trigger.getAttribute('data-topic').toLowerCase();
         const evt = new CustomEvent('topicChange', { detail: { topic, manual: true } });
         document.dispatchEvent(evt);
+        
         if (window.topicSwiper) {
-          const index = Array.from(topicButtons).findIndex(btn => btn === button);
+          const index = Array.from(topicTriggers).findIndex(btn => btn === trigger);
           window.topicSwiper.slideTo(index);
         }
       });
     });
     
+    // Default-Topic aus URL oder erstes Element
     const urlParams = new URLSearchParams(window.location.search);
     const urlTopic = urlParams.get('topic');
     let defaultTopic = urlTopic ? urlTopic.toLowerCase() : null;
-    if (!defaultTopic && topicButtons.length > 0) {
-      defaultTopic = topicButtons[0].getAttribute('data-topic').toLowerCase();
+    
+    if (!defaultTopic && topicTriggers.length > 0) {
+      defaultTopic = topicTriggers[0].getAttribute('data-topic').toLowerCase();
     }
-    topicButtons.forEach((btn, index) => {
-      const btnTopic = btn.getAttribute('data-topic').toLowerCase();
-      if (btnTopic === defaultTopic) {
-        btn.classList.add('is-active');
-        
-        const parentSlide = btn.closest('.swiper-slide');
-        if (parentSlide) {
-          parentSlide.setAttribute('aria-selected', 'true');
-        }
-        
+    
+    topicTriggers.forEach((trigger, index) => {
+      const triggerTopic = trigger.getAttribute('data-topic').toLowerCase();
+      const isActive = triggerTopic === defaultTopic;
+      
+      // Visuelles Feedback
+      if (isActive) {
+        trigger.classList.add('is-active');
+      } else {
+        trigger.classList.remove('is-active');
+      }
+      
+      // ARIA-Attribute auf Tab-Element setzen
+      const parentTabItem = trigger.closest('.swiper-slide');
+      if (parentTabItem) {
+        parentTabItem.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      }
+      
+      if (isActive) {
         const evt = new CustomEvent('topicChange', { detail: { topic: defaultTopic, manual: false } });
         document.dispatchEvent(evt);
+        
         setTimeout(() => {
           if (window.topicSwiper) {
             window.topicSwiper.slideTo(index);
           }
         }, 100);
-      } else {
-        btn.classList.remove('is-active');
-        
-        const parentSlide = btn.closest('.swiper-slide');
-        if (parentSlide) {
-          parentSlide.setAttribute('aria-selected', 'false');
-        }
       }
     });
   });
   
-  // Topic Banner Animation
-  let topicBannerTl;
-  document.addEventListener('topicChange', function(e) {
+/******************************************************************************
+ * TOPIC BANNER ANIMATION
+ *****************************************************************************/
+let topicBannerTl;
+document.addEventListener('topicChange', function(e) {
     if (!e.detail.manual) return;
     if (topicBannerTl) topicBannerTl.kill();
     const bannerEl = document.querySelector('.topic_banner');
@@ -641,8 +610,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Topic Swiper
-  document.addEventListener("DOMContentLoaded", function () {
+/******************************************************************************
+ * TOPIC SWIPER
+ *****************************************************************************/
+document.addEventListener("DOMContentLoaded", function () {
     // ARIA-Rollen für alle Swiper korrigieren
     function correctSwiperARIARoles() {
       // Korrektur für den Topic-Filter (Tabs)
@@ -705,8 +676,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Topic Change Listener for hero_img
-  document.addEventListener("DOMContentLoaded", function() {
+/******************************************************************************
+ * TOPIC CHANGE LISTENER FOR HERO_IMG
+ *****************************************************************************/
+document.addEventListener("DOMContentLoaded", function() {
     const heroDataEls = document.querySelectorAll('.hero_cms-data[data-topic][data-hero-url]');
     const topicToImageMap = {};
     heroDataEls.forEach(el => {
@@ -727,10 +700,14 @@ document.addEventListener('DOMContentLoaded', () => {
         heroImg.removeAttribute("srcset");
         heroImg.removeAttribute("sizes");
         heroImg.src = newUrl;
-        gsap.to(heroImg, { duration: 0.5, opacity: 1, onStart: function() { heroImg.style.visibility = "visible"; }});
+        // topic hero img visibility
+        heroImg.style.visibility = "visible";
+        heroImg.style.opacity = "1";
       };
     } else {
-      gsap.to(heroImg, { duration: 0.5, opacity: 1, onStart: function() { heroImg.style.visibility = "visible"; }});
+      // default hero img visibility
+      heroImg.style.visibility = "visible";
+      heroImg.style.opacity = "1";
     }
   
     document.addEventListener('topicChange', function(e) {
@@ -751,8 +728,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Topic Change Listener for quote_img
-  document.addEventListener("DOMContentLoaded", function() {
+/******************************************************************************
+ * TOPIC CHANGE LISTENER FOR QUOTE_IMG
+ *****************************************************************************/
+document.addEventListener("DOMContentLoaded", function() {
     const quoteDataEls = document.querySelectorAll('.quote_cms-data[data-topic][data-quote-url]');
     const topicToQuoteMap = {};
     quoteDataEls.forEach(el => {
@@ -792,8 +771,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Topic Change Listener for Gallery
-  document.addEventListener('topicChange', function(e) {
+/******************************************************************************
+ * TOPIC CHANGE LISTENER FOR GALLERY
+ *****************************************************************************/
+document.addEventListener('topicChange', function(e) {
     const selectedTopic = e.detail.topic;
     function applyTopicFilter() {
       if (!window.gallerySwiper) return false;
@@ -836,8 +817,23 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Nav show/hide
-  (function () {
+/******************************************************************************
+ * NAV SHOW/HIDE
+ *****************************************************************************/
+(function () {
+    // Anfängliches Einblenden der Navbar-Komponente (die im CSS ausgeblendet ist)
+    const navbarComponent = document.querySelector(".navbar_component");
+    if (navbarComponent) {
+      // Nach einem kurzen Delay einblenden (nach dem Hero-Heading)
+      setTimeout(() => {
+        // Transition hinzufügen, bevor Werte geändert werden
+        navbarComponent.style.transition = "opacity 300ms ease-out, visibility 300ms ease-out";
+        navbarComponent.style.visibility = "visible";
+        navbarComponent.style.opacity = "1";
+      }, 200); // Etwas verzögert nach der Hero-Animation
+    }
+  
+    // Ursprüngliche Scroll-Funktionalität für das Ein-/Ausblenden der Nav-Elemente
     const navBg = document.querySelector(".navbar_bg-layer");
     const navMenu = document.querySelector(".navbar_menu");
     const hero = document.querySelector("#hero");
@@ -874,8 +870,10 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
   
   
-  // Popup-Skript mit Attributen
-  document.addEventListener("DOMContentLoaded", function () {
+/******************************************************************************
+ * POPUP-SKRIPT MIT ATTRIBUTEN
+ *****************************************************************************/
+document.addEventListener("DOMContentLoaded", function () {
   
     function openPopup(targetPopup) {
       if (!targetPopup) return;
@@ -1021,8 +1019,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Main Bildergalerie mit Swiper
-  document.addEventListener("DOMContentLoaded", function () {
+/******************************************************************************
+ * MAIN BILDERGALERIE MIT SWIPER
+ *****************************************************************************/
+document.addEventListener("DOMContentLoaded", function () {
     const sliderEl = document.querySelector('.swiper.is-gallery');
     if (!sliderEl) return;
     
@@ -1033,8 +1033,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (templateSlide) templateSlide.remove();
   
     const categoriesData = document.querySelectorAll('.gallery_collection-item .gallery_data');
-    const tabs = document.querySelectorAll('.gallery_tabs');
-  
+    
+    // "triggerElements" (Ebene 3)
+    // Diese Elemente sind nicht die eigentlichen Tabs, sondern nur Trigger
+    const triggerElements = document.querySelectorAll('.gallery_tabs');
+    
+    // Finde die tatsächlichen Tab-Elemente (Ebene 2)
+    const tabItems = document.querySelectorAll('.gallery_tabs-collection-item');
+
     categoriesData.forEach((categoryEl) => {
       const categoryId = categoryEl.getAttribute('data-gallery-id');
       const imageEls = categoryEl.querySelectorAll('.gallery_img-url[data-img-url]');
@@ -1068,32 +1074,82 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       keyboard: { enabled: true, onlyInViewport: true },
       breakpoints: {
-        480: { slidesPerView: 2.2, spaceBetween: 16, centeredSlides: false, initialSlide: 0 },
-        992: { slidesPerView: 2, spaceBetween: 32, centeredSlides: true, initialSlide: 1 },
+        480: {
+          slidesPerView: 2.2,
+          spaceBetween: 16,
+          centeredSlides: false,
+          initialSlide: 0
+        },
+        992: {
+          slidesPerView: 2,
+          spaceBetween: 32,
+          centeredSlides: true,
+          initialSlide: 1
+        },
       },
     });
   
     function updateActiveTab() {
       const activeSlide = window.gallerySwiper.slides[window.gallerySwiper.activeIndex];
       const activeCategory = activeSlide.getAttribute('data-gallery-id');
-      tabs.forEach(tab => tab.classList.remove('is-custom-current'));
-      const activeTab = document.querySelector(`.gallery_tabs[data-gallery-id="${activeCategory}"]`);
-      if (activeTab) {
-        activeTab.classList.add('is-custom-current');
+      
+      // Zuerst alle visuellen Hervorhebungen zurücksetzen
+      triggerElements.forEach(trigger => trigger.classList.remove('is-custom-current'));
+      
+      // Dann das entsprechende Trigger-Element visuell hervorheben
+      const activeTrigger = document.querySelector(`.gallery_tabs[data-gallery-id="${activeCategory}"]`);
+      if (activeTrigger) {
+        activeTrigger.classList.add('is-custom-current');
       }
+      
+      // ARIA-Attribute korrekt auf den tatsächlichen Tab-Elementen (Ebene 2) setzen
+      tabItems.forEach(tabItem => {
+        const childTrigger = tabItem.querySelector(`.gallery_tabs[data-gallery-id]`);
+        if (childTrigger) {
+          const tabCategory = childTrigger.getAttribute('data-gallery-id');
+          const isActive = tabCategory === activeCategory;
+          
+          // ARIA nur auf dem Tab-Element (Ebene 2) setzen
+          tabItem.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          
+          // Sicherstellen, dass das Trigger-Element (Ebene 3) kein aria-selected hat
+          childTrigger.removeAttribute('aria-selected');
+        }
+      });
     }
   
-    tabs.forEach((tab) => {
-      tab.addEventListener('click', function () {
-        const targetCategory = tab.getAttribute('data-gallery-id');
+    // Event-Listener für Klicks auf Trigger-Elemente
+    triggerElements.forEach((trigger) => {
+      trigger.addEventListener('click', function () {
+        const targetCategory = trigger.getAttribute('data-gallery-id');
         const allSlides = wrapper.querySelectorAll('.swiper-slide.is-gallery');
         let targetIndex = 0;
+        
         allSlides.forEach((slide, idx) => {
           if (slide.getAttribute('data-gallery-id') === targetCategory && targetIndex === 0) {
             targetIndex = idx;
           }
         });
+        
         window.gallerySwiper.slideTo(targetIndex);
+        
+        // ARIA-Fix: Setze ARIA-Attribute NUR auf Ebene 2-Elementen (Tab-Items)
+        // Finde zuerst das übergeordnete Tab-Element für diesen Trigger
+        const parentTabItem = trigger.closest('[role="tab"]') || trigger.closest('.gallery_tabs-collection-item');
+        
+        if (parentTabItem) {
+          // Alle Tab-Elemente zurücksetzen
+          tabItems.forEach(item => {
+            item.setAttribute('aria-selected', 'false');
+          });
+          
+          // Das aktive Tab-Element auf true setzen
+          parentTabItem.setAttribute('aria-selected', 'true');
+          
+          // Sicherstellen, dass Trigger-Elemente kein aria-selected haben
+          triggerElements.forEach(t => t.removeAttribute('aria-selected'));
+        }
+        
         updateActiveTab();
       });
     });
@@ -1103,8 +1159,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Swiper Gästestimmen
-  document.addEventListener("DOMContentLoaded", function () {
+/******************************************************************************
+ * SWIPER GÄSTESTIMMEN
+ *****************************************************************************/
+document.addEventListener("DOMContentLoaded", function () {
     const swiper = new Swiper('.swiper.is-reviews', {
       effect: 'fade',
       fadeEffect: {
@@ -1137,41 +1195,78 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   
-  // ROOMS TABS & SWIPER
-  document.addEventListener('DOMContentLoaded', () => {
+/******************************************************************************
+ * ROOMS TABS & SWIPER
+ *****************************************************************************/
+document.addEventListener('DOMContentLoaded', () => {
     const roomsSection = document.querySelector('.section_rooms');
     if (!roomsSection) return;
   
-    let tabs = roomsSection.querySelectorAll('[data-tab]');
-    let tabContents = roomsSection.querySelectorAll('[data-target-tab]');
+    // Tablist (Ebene 1)
     const tabList = roomsSection.querySelector('[data-tab-list]');
-  
+    
+    // Tab-Items (Ebene 2) - diese sollten role="tab" haben
+    const tabItems = roomsSection.querySelectorAll('.rooms_tabs-collection-item');
+    
+    // Trigger-Elemente (Ebene 3) - diese sollten KEINE ARIA-Attribute haben
+    const triggerElements = roomsSection.querySelectorAll('[data-tab]');
+    
+    // Inhalte der Tabs
+    const tabContents = roomsSection.querySelectorAll('[data-target-tab]');
+
+    // Setze role="tablist" auf das Tablist-Element
     if (tabList) {
       tabList.setAttribute('role', 'tablist');
     }
-  
+
     let currentSwiper = null;
-  
+
     function setActiveTab(tabId) {
-      tabs.forEach(tab => {
-        tab.classList.remove('is-custom-current');
+      // Visuelles Feedback für Trigger-Elemente zurücksetzen
+      triggerElements.forEach(trigger => {
+        trigger.classList.remove('is-custom-current');
       });
+      
+      // ARIA-Attribute auf Tab-Elementen (Ebene 2) zurücksetzen
+      tabItems.forEach(tabItem => {
+        // Das tatsächliche Tab-Element erhält aria-selected="false"
+        tabItem.setAttribute('aria-selected', 'false');
+        
+        // Sicherstellen, dass eventuell vorhandene Trigger-Elemente kein aria-selected haben
+        const childTrigger = tabItem.querySelector('[data-tab]');
+        if (childTrigger) {
+          childTrigger.removeAttribute('aria-selected');
+        }
+      });
+      
+      // Tab-Inhalte ausblenden
       tabContents.forEach(content => {
         content.classList.add('hide');
         content.setAttribute('aria-hidden', 'true');
       });
-  
-      const activeTab = roomsSection.querySelector(`[data-tab="${tabId}"]`);
+
+      // Aktiven Trigger finden
+      const activeTrigger = roomsSection.querySelector(`[data-tab="${tabId}"]`);
+      if (!activeTrigger) return;
+      
+      // Visuelles Feedback für aktiven Trigger
+      activeTrigger.classList.add('is-custom-current');
+      
+      // ARIA-Attribute für übergeordnetes Tab-Element setzen
+      const parentTabItem = activeTrigger.closest('[role="tab"]') || 
+                            activeTrigger.closest('.rooms_tabs-collection-item');
+      if (parentTabItem) {
+        parentTabItem.setAttribute('aria-selected', 'true');
+      }
+      
+      // Zugehörigen Inhalt anzeigen
       const activeContent = roomsSection.querySelector(`[data-target-tab="${tabId}"]`);
-      if (!activeTab) return;
-  
-      activeTab.classList.add('is-custom-current');
       if (activeContent) {
         activeContent.classList.remove('hide');
         activeContent.setAttribute('aria-hidden', 'false');
       }
     }
-  
+
     function initSwiper(tabId) {
       if (currentSwiper) {
         currentSwiper.destroy();
@@ -1179,7 +1274,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const container = roomsSection.querySelector(`[data-swiper="${tabId}"]`);
       if (!container) return;
-  
+
       currentSwiper = new Swiper(container, {
         ...swiperAnimationConfig,
         autoHeight: false,
@@ -1216,16 +1311,16 @@ document.addEventListener('DOMContentLoaded', () => {
         },
       });
     }
-  
-    if (tabs.length) {
-      const firstTabId = tabs[0].getAttribute('data-tab');
+
+    if (triggerElements.length) {
+      const firstTabId = triggerElements[0].getAttribute('data-tab');
       setActiveTab(firstTabId);
       initSwiper(firstTabId);
     }
-  
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const tabId = tab.getAttribute('data-tab');
+
+    triggerElements.forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const tabId = trigger.getAttribute('data-tab');
         setActiveTab(tabId);
         initSwiper(tabId);
       });
@@ -1233,41 +1328,78 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // OFFERS TABS & SWIPER
-  document.addEventListener('DOMContentLoaded', () => {
+/******************************************************************************
+ * OFFERS TABS & SWIPER
+ *****************************************************************************/
+document.addEventListener('DOMContentLoaded', () => {
     const offersSection = document.querySelector('.section_offers');
     if (!offersSection) return;
   
-    let tabs = offersSection.querySelectorAll('[data-tab]');
-    let tabContents = offersSection.querySelectorAll('[data-target-tab]');
+    // Tablist (Ebene 1)
     const tabList = offersSection.querySelector('[data-tab-list]');
-  
+    
+    // Tab-Items (Ebene 2) - diese sollten role="tab" haben
+    const tabItems = offersSection.querySelectorAll('.offers_tabs-collection-item');
+    
+    // Trigger-Elemente (Ebene 3) - diese sollten KEINE ARIA-Attribute haben
+    const triggerElements = offersSection.querySelectorAll('[data-tab]');
+    
+    // Inhalte der Tabs
+    const tabContents = offersSection.querySelectorAll('[data-target-tab]');
+
+    // Setze role="tablist" auf das Tablist-Element
     if (tabList) {
       tabList.setAttribute('role', 'tablist');
     }
-  
+
     let currentSwiper = null;
-  
+
     function setActiveTab(tabId) {
-      tabs.forEach(tab => {
-        tab.classList.remove('is-custom-current');
+      // Visuelles Feedback für Trigger-Elemente zurücksetzen
+      triggerElements.forEach(trigger => {
+        trigger.classList.remove('is-custom-current');
       });
+      
+      // ARIA-Attribute auf Tab-Elementen (Ebene 2) zurücksetzen
+      tabItems.forEach(tabItem => {
+        // Das tatsächliche Tab-Element erhält aria-selected="false"
+        tabItem.setAttribute('aria-selected', 'false');
+        
+        // Sicherstellen, dass eventuell vorhandene Trigger-Elemente kein aria-selected haben
+        const childTrigger = tabItem.querySelector('[data-tab]');
+        if (childTrigger) {
+          childTrigger.removeAttribute('aria-selected');
+        }
+      });
+      
+      // Tab-Inhalte ausblenden
       tabContents.forEach(content => {
         content.classList.add('hide');
         content.setAttribute('aria-hidden', 'true');
       });
-  
-      const activeTab = offersSection.querySelector(`[data-tab="${tabId}"]`);
+
+      // Aktiven Trigger finden
+      const activeTrigger = offersSection.querySelector(`[data-tab="${tabId}"]`);
+      if (!activeTrigger) return;
+      
+      // Visuelles Feedback für aktiven Trigger
+      activeTrigger.classList.add('is-custom-current');
+      
+      // ARIA-Attribute für übergeordnetes Tab-Element setzen
+      const parentTabItem = activeTrigger.closest('[role="tab"]') || 
+                            activeTrigger.closest('.offers_tabs-collection-item');
+      if (parentTabItem) {
+        parentTabItem.setAttribute('aria-selected', 'true');
+      }
+      
+      // Zugehörigen Inhalt anzeigen
       const activeContent = offersSection.querySelector(`[data-target-tab="${tabId}"]`);
-      if (!activeTab) return;
-  
-      activeTab.classList.add('is-custom-current');
       if (activeContent) {
         activeContent.classList.remove('hide');
         activeContent.setAttribute('aria-hidden', 'false');
       }
     }
-  
+
     function initSwiper(tabId) {
       if (currentSwiper) {
         currentSwiper.destroy();
@@ -1275,7 +1407,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const container = offersSection.querySelector(`[data-swiper="${tabId}"]`);
       if (!container) return;
-  
+
       currentSwiper = new Swiper(container, {
         ...swiperAnimationConfig,
         autoHeight: false,
@@ -1312,16 +1444,16 @@ document.addEventListener('DOMContentLoaded', () => {
         },
       });
     }
-  
-    if (tabs.length) {
-      const firstTabId = tabs[0].getAttribute('data-tab');
+
+    if (triggerElements.length) {
+      const firstTabId = triggerElements[0].getAttribute('data-tab');
       setActiveTab(firstTabId);
       initSwiper(firstTabId);
     }
-  
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const tabId = tab.getAttribute('data-tab');
+
+    triggerElements.forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const tabId = trigger.getAttribute('data-tab');
         setActiveTab(tabId);
         initSwiper(tabId);
       });
@@ -1329,8 +1461,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Swiper Social Media Reviews
-  document.addEventListener("DOMContentLoaded", function () {
+/******************************************************************************
+ * SWIPER SOCIAL MEDIA REVIEWS
+ *****************************************************************************/
+document.addEventListener("DOMContentLoaded", function () {
     const swiper = new Swiper('.swiper.is-sm-reviews', {
       ...swiperAnimationConfig,
       autoHeight: false,
@@ -1366,8 +1500,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Popup Gallery Swiper mit Thumbs
-  document.addEventListener("DOMContentLoaded", function () {
+/******************************************************************************
+ * POPUP GALLERY SWIPER MIT THUMBS
+ *****************************************************************************/
+document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll('.popup_gallery').forEach(container => {
       // Cache häufig verwendete DOM-Elemente
       const mainSliderEl = container.querySelector('.swiper.is-popup');
@@ -1495,8 +1631,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   
-  // Rooms & Offers to Form
-  document.addEventListener('click', function(e) {
+/******************************************************************************
+ * ROOMS & OFFERS TO FORM
+ *****************************************************************************/
+document.addEventListener('click', function(e) {
     // Cache häufig verwendete DOM-Elemente
     const roomElement = document.querySelector('[data-room-element]');
     const offerElement = document.querySelector('[data-offer-element]');
@@ -1656,20 +1794,31 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   
-  // Zentrale ARIA-Korrekturen für bessere Barrierefreiheit und Wartbarkeit
-  document.addEventListener("DOMContentLoaded", function() {
+/******************************************************************************
+ * ZENTRALE ARIA-KORREKTUREN FÜR BARRIEREFREIHEIT
+ *****************************************************************************/
+document.addEventListener("DOMContentLoaded", function() {
     /**
-     * Hilfsfunktionen zur konsistenten Verwaltung von ARIA-Attributen
-     * - Effizienter als mehrere separate Event-Listener
-     * - Zentralisiert die ARIA-Korrekturen an einer Stelle
-     * - Spart Code durch Wiederverwendung von Funktionen
+     * WICHTIGER HINWEIS ZUR ARIA-IMPLEMENTIERUNG:
+     * 
+     * Diese Seite nutzt eine "Zwei-Schichten-Strategie" für ARIA-Attribute:
+     * 
+     * 1. ARIAHelper (hier): Setzt initiale ARIA-Attribute und korrigiert sie nach Timer.
+     *    Dies ist notwendig, weil Webflow und Swiper manchmal ARIA-Attribute überschreiben.
+     * 
+     * 2. Modulare Event-Handler: In den einzelnen Komponenten-Blöcken setzen diese
+     *    ARIA-Attribute direkt bei Benutzerinteraktionen.
+     * 
+     * Beide Systeme sind notwendig für vollständige Accessibility-Konformität.
+     * Das Entfernen einer der beiden Schichten kann zu Accessibility-Fehlern führen.
      */
     const ARIAHelper = {
       /**
-       * Setzt ARIA-Rolle für Elemente, die einem Selektor entsprechen
-       * @param {string} selector - CSS-Selektor
-       * @param {string} role - Die zu setzende ARIA-Rolle
-       * @param {Object} attributes - Zusätzliche ARIA-Attribute als Key-Value-Paare
+       * Hilfsfunktionen zur konsistenten Verwaltung von ARIA-Attributen
+       * - Standardisierte Benennungskonvention:
+       *   - Ebene 1: tabList (container mit role="tablist")
+       *   - Ebene 2: tabItems (elemente mit role="tab", bekommen aria-selected)
+       *   - Ebene 3: triggerElements (klickbare elemente innerhalb der Tabs, KEINE aria-attribute)
        */
       setRole: function(selector, role, attributes = {}) {
         const elements = document.querySelectorAll(selector);
@@ -1684,53 +1833,67 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       
       /**
-       * Korrigiert Tab-bezogene ARIA-Attribute
-       * @param {string} tablistSelector - Selektor für Tablist-Container
-       * @param {string} tabSelector - Selektor für einzelne Tabs innerhalb der Tablist
+       * Korrigiert Tab-bezogene ARIA-Attribute basierend auf der dreistufigen Hierarchie
+       * @param {string} tabListSelector - Selektor für Tablist-Container (Ebene 1)
+       * @param {string} tabItemsSelector - Selektor für Tab-Elemente (Ebene 2)
+       * @param {string} triggerSelector - Selektor für Trigger-Elemente innerhalb der Tabs (Ebene 3)
        */
-      setupTablist: function(tablistSelector, tabSelector) {
-        const tablists = document.querySelectorAll(tablistSelector);
-        if (tablists.length === 0) return;
-        
-        tablists.forEach(list => {
-          // Setze role="tablist" für den Container
+      setupTablist: function(tabListSelector, tabItemsSelector, triggerSelector) {
+        // Tab-Listen (Ebene 1)
+        const tabLists = document.querySelectorAll(tabListSelector);
+        tabLists.forEach(list => {
           list.setAttribute('role', 'tablist');
-          
-          // Finde alle Tabs und setze korrekte ARIA-Attribute
-          const tabs = list.querySelectorAll(tabSelector);
-          tabs.forEach(tab => {
-            // Setze role="tab" für das Tab-Element
-            tab.setAttribute('role', 'tab');
-            
-            // Prüfe, ob ein Kind-Element das aria-selected Attribut hat
-            const childWithSelected = tab.querySelector('[aria-selected]');
-            
-            if (childWithSelected) {
-              // Das Kind hat aria-selected - kopiere den Wert auf das Tab-Element
-              const isSelected = childWithSelected.getAttribute('aria-selected') === 'true';
-              tab.setAttribute('aria-selected', isSelected ? 'true' : 'false');
-              
-              // Entferne redundantes Attribut vom Kind
-              childWithSelected.removeAttribute('aria-selected');
-            } 
-            else if (!tab.hasAttribute('aria-selected')) {
-              // Tab hat noch kein aria-selected - setze es auf false
-              tab.setAttribute('aria-selected', 'false');
-            }
-            
-            // Überprüfe, ob die aktive Klasse auf einem Kind-Element statt auf dem Tab ist
-            const childWithActiveClass = tab.querySelector('.is-custom-current');
-            
-            if (childWithActiveClass && childWithActiveClass !== tab) {
-              // Verschiebe die Klasse vom Kind zum Tab-Element
-              tab.classList.add('is-custom-current');
-              childWithActiveClass.classList.remove('is-custom-current');
-              
-              // Setze aria-selected auf true für das aktive Tab
-              tab.setAttribute('aria-selected', 'true');
-            }
-          });
         });
+        
+        // Tab-Elemente (Ebene 2)
+        const tabItems = document.querySelectorAll(tabItemsSelector);
+        tabItems.forEach(tabItem => {
+          // Tab-Element mit korrekter Rolle
+          tabItem.setAttribute('role', 'tab');
+          
+          // Prüfe, ob das Tab aktiv ist (über CSS-Klasse oder Kind-Element)
+          const isActive = tabItem.classList.contains('is-custom-current') || 
+                           tabItem.classList.contains('is-active') ||
+                           tabItem.querySelector('.is-custom-current, .is-active');
+          
+          // Setze aria-selected direkt auf dem Tab-Element
+          tabItem.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        
+        // Trigger-Elemente (Ebene 3) - entferne ARIA-Attribute
+        if (triggerSelector) {
+          const triggers = document.querySelectorAll(triggerSelector);
+          triggers.forEach(trigger => {
+            // Trigger sollten keine ARIA-Tab-Attribute haben
+            trigger.removeAttribute('aria-selected');
+            
+            // Bewahre Klassen für visuelles Feedback
+            // Diese Klassen werden vom JS-Code für die Darstellung verwendet
+          });
+        }
+      },
+      
+      /**
+       * Korrigiert ARIA für Swiper-basierte Tabs
+       * Bei Swiper ist die Struktur:
+       * - Wrapper (Ebene 1, tabList)
+       * - Slides (Ebene 2, tabItems)
+       * - Buttons/Trigger (Ebene 3)
+       */
+      setupSwiperTabs: function() {
+        // Topic-Filter Tabs (im Swiper)
+        this.setupTablist(
+          '.swiper-wrapper.is-topic', 
+          '.swiper-wrapper.is-topic .swiper-slide',
+          '.topic_button'
+        );
+        
+        // Gewöhnliche Collection-basierte Tabs
+        this.setupTablist(
+          '.gallery_tabs-collection-list, .rooms_tabs-collection-list, .offers_tabs-collection-list',
+          '.gallery_tabs-collection-item, .rooms_tabs-collection-item, .offers_tabs-collection-item',
+          '.gallery_tabs, [class*="tabs"]:not([role="tab"])'
+        );
       },
       
       /**
@@ -1744,7 +1907,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         wrappers.forEach(wrapper => {
           // Für Karussells ist role="region" semantisch korrekter als role="list"
-          if (wrapper.getAttribute('role') === 'list') {
+          if (wrapper.getAttribute('role') === 'list' || !wrapper.getAttribute('role')) {
             wrapper.setAttribute('role', 'region');
             wrapper.setAttribute('aria-roledescription', 'carousel');
           }
@@ -1752,33 +1915,34 @@ document.addEventListener('DOMContentLoaded', () => {
           // Slides in Karussells sollten role="group" haben
           const slides = wrapper.querySelectorAll(slideSelector);
           slides.forEach(slide => {
-            if (slide.getAttribute('role') !== 'tab') { // Bewahre Tabs-Funktionalität
+            // Slides mit role="tab" behalten diese Rolle (für Swiper-Tabs)
+            if (slide.getAttribute('role') !== 'tab') {
               slide.setAttribute('role', 'group');
               slide.setAttribute('aria-roledescription', 'slide');
             }
           });
         });
+      },
+
+      /**
+       * Führt alle ARIA-Korrekturen aus
+       */
+      initAll: function() {
+        // Tab-Systeme einrichten
+        this.setupSwiperTabs();
+        
+        // Karusselle einrichten (nicht-Tab Swiper)
+        this.setupCarousel(
+          '.swiper-wrapper:not(.is-topic)',
+          '.swiper-slide:not([role="tab"])'
+        );
       }
     };
 
-    // Anwendung der Hilfsfunktionen auf spezifische Elemente
+    // ARIA-Korrekturen anwenden
+    ARIAHelper.initAll();
     
-    // 1. Tab-Listen korrekt einrichten
-    ARIAHelper.setupTablist(
-      '.gallery_tabs-collection-list, .rooms_tabs-list, .offers_tabs-list',
-      '[role="listitem"], .gallery_tabs-collection-item, [class*="tab-item"]'
-    );
-    
-    // 2. Korrigiere explizit listitem zu tab in bestehenden tablists (ersetzt den separaten Event-Listener)
-    ARIAHelper.setupTablist('[role="tablist"]', '[role="listitem"]');
-    
-    // 3. Spezifische Behandlung für Topic-Filter (Tabs)
-    ARIAHelper.setRole('.swiper-wrapper.is-topic', 'tablist');
-    ARIAHelper.setRole('.swiper-wrapper.is-topic .swiper-slide', 'tab');
-    
-    // 4. Karussells/Galerien korrekt einrichten
-    ARIAHelper.setupCarousel(
-      '.swiper-wrapper:not(.is-topic)',
-      '.swiper-slide'
-    );
+    // Bei dynamischen Änderungen oder AJAX-Navigationen erneut anwenden
+    // z.B. nach Swiper-Initialisierung
+    setTimeout(ARIAHelper.initAll.bind(ARIAHelper), 1000);
   });
