@@ -1213,6 +1213,50 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Inhalte der Tabs
     const tabContents = roomsSection.querySelectorAll('[data-target-tab]');
+    
+    // Prüfe auf leere Tabs und blende sie aus
+    function hideEmptyTabs() {
+      let visibleTabCount = 0;
+      let firstVisibleTabId = null;
+      
+      // Durchlaufe alle Tab-Trigger und prüfe die zugehörigen Inhalte
+      triggerElements.forEach(trigger => {
+        const tabId = trigger.getAttribute('data-tab');
+        if (!tabId) return;
+        
+        const tabContent = roomsSection.querySelector(`[data-target-tab="${tabId}"]`);
+        if (!tabContent) return;
+        
+        const tabPane = tabContent.querySelector('.w-dyn-list');
+        if (!tabPane) return;
+        
+        // Prüfe, ob "No items found" Text vorhanden ist oder keine Items in der Liste sind
+        const emptyMessage = tabPane.querySelector('.w-dyn-empty');
+        const hasItems = tabPane.querySelector('.w-dyn-items')?.children.length > 0;
+        
+        const isEmpty = (emptyMessage && getComputedStyle(emptyMessage).display !== 'none') || !hasItems;
+        
+        if (isEmpty) {
+          // Verstecke den Tab-Trigger (und sein übergeordnetes Element)
+          const tabItem = trigger.closest('.rooms_tabs-collection-item');
+          if (tabItem) tabItem.style.display = 'none';
+        } else {
+          visibleTabCount++;
+          if (!firstVisibleTabId) firstVisibleTabId = tabId;
+        }
+      });
+      
+      // Wenn es keine sichtbaren Tabs gibt, gesamte Sektion ausblenden
+      if (visibleTabCount === 0) {
+        roomsSection.style.display = 'none';
+      } else if (firstVisibleTabId) {
+        // Setze den ersten sichtbaren Tab als aktiv
+        setActiveTab(firstVisibleTabId);
+        initSwiper(firstVisibleTabId);
+      }
+      
+      return { visibleTabCount, firstVisibleTabId };
+    }
 
     // Setze role="tablist" auf das Tablist-Element
     if (tabList) {
@@ -1274,6 +1318,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const container = roomsSection.querySelector(`[data-swiper="${tabId}"]`);
       if (!container) return;
+      
+      // Prüfe, ob der Container leer ist
+      const emptyMessage = container.querySelector('.w-dyn-empty');
+      const hasItems = container.querySelector('.w-dyn-items')?.children.length > 0;
+      
+      if ((emptyMessage && getComputedStyle(emptyMessage).display !== 'none') || !hasItems) {
+        return; // Initialisiere den Swiper nicht für leere Container
+      }
 
       currentSwiper = new Swiper(container, {
         ...swiperAnimationConfig,
@@ -1312,19 +1364,22 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    if (triggerElements.length) {
-      const firstTabId = triggerElements[0].getAttribute('data-tab');
-      setActiveTab(firstTabId);
-      initSwiper(firstTabId);
-    }
-
-    triggerElements.forEach(trigger => {
-      trigger.addEventListener('click', () => {
-        const tabId = trigger.getAttribute('data-tab');
-        setActiveTab(tabId);
-        initSwiper(tabId);
+    // Zuerst leere Tabs prüfen und ausblenden
+    const { visibleTabCount, firstVisibleTabId } = hideEmptyTabs();
+    
+    // Wenn es sichtbare Tabs gibt, Event-Listener für Klicks hinzufügen
+    if (visibleTabCount > 0) {
+      triggerElements.forEach(trigger => {
+        // Nur für sichtbare Tabs Event-Listener hinzufügen
+        if (trigger.closest('.rooms_tabs-collection-item')?.style.display !== 'none') {
+          trigger.addEventListener('click', () => {
+            const tabId = trigger.getAttribute('data-tab');
+            setActiveTab(tabId);
+            initSwiper(tabId);
+          });
+        }
       });
-    });
+    }
   });
   
   
@@ -1346,6 +1401,50 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Inhalte der Tabs
     const tabContents = offersSection.querySelectorAll('[data-target-tab]');
+    
+    // Prüfe auf leere Tabs und blende sie aus
+    function hideEmptyTabs() {
+      let visibleTabCount = 0;
+      let firstVisibleTabId = null;
+      
+      // Durchlaufe alle Tab-Trigger und prüfe die zugehörigen Inhalte
+      triggerElements.forEach(trigger => {
+        const tabId = trigger.getAttribute('data-tab');
+        if (!tabId) return;
+        
+        const tabContent = offersSection.querySelector(`[data-target-tab="${tabId}"]`);
+        if (!tabContent) return;
+        
+        const tabPane = tabContent.querySelector('.w-dyn-list');
+        if (!tabPane) return;
+        
+        // Prüfe, ob "No items found" Text vorhanden ist oder keine Items in der Liste sind
+        const emptyMessage = tabPane.querySelector('.w-dyn-empty');
+        const hasItems = tabPane.querySelector('.w-dyn-items')?.children.length > 0;
+        
+        const isEmpty = (emptyMessage && getComputedStyle(emptyMessage).display !== 'none') || !hasItems;
+        
+        if (isEmpty) {
+          // Verstecke den Tab-Trigger (und sein übergeordnetes Element)
+          const tabItem = trigger.closest('.offers_tabs-collection-item');
+          if (tabItem) tabItem.style.display = 'none';
+        } else {
+          visibleTabCount++;
+          if (!firstVisibleTabId) firstVisibleTabId = tabId;
+        }
+      });
+      
+      // Wenn es keine sichtbaren Tabs gibt, gesamte Sektion ausblenden
+      if (visibleTabCount === 0) {
+        offersSection.style.display = 'none';
+      } else if (firstVisibleTabId) {
+        // Setze den ersten sichtbaren Tab als aktiv
+        setActiveTab(firstVisibleTabId);
+        initSwiper(firstVisibleTabId);
+      }
+      
+      return { visibleTabCount, firstVisibleTabId };
+    }
 
     // Setze role="tablist" auf das Tablist-Element
     if (tabList) {
@@ -1407,6 +1506,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const container = offersSection.querySelector(`[data-swiper="${tabId}"]`);
       if (!container) return;
+      
+      // Prüfe, ob der Container leer ist
+      const emptyMessage = container.querySelector('.w-dyn-empty');
+      const hasItems = container.querySelector('.w-dyn-items')?.children.length > 0;
+      
+      if ((emptyMessage && getComputedStyle(emptyMessage).display !== 'none') || !hasItems) {
+        return; // Initialisiere den Swiper nicht für leere Container
+      }
 
       currentSwiper = new Swiper(container, {
         ...swiperAnimationConfig,
@@ -1445,19 +1552,22 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    if (triggerElements.length) {
-      const firstTabId = triggerElements[0].getAttribute('data-tab');
-      setActiveTab(firstTabId);
-      initSwiper(firstTabId);
-    }
-
-    triggerElements.forEach(trigger => {
-      trigger.addEventListener('click', () => {
-        const tabId = trigger.getAttribute('data-tab');
-        setActiveTab(tabId);
-        initSwiper(tabId);
+    // Zuerst leere Tabs prüfen und ausblenden
+    const { visibleTabCount, firstVisibleTabId } = hideEmptyTabs();
+    
+    // Wenn es sichtbare Tabs gibt, Event-Listener für Klicks hinzufügen
+    if (visibleTabCount > 0) {
+      triggerElements.forEach(trigger => {
+        // Nur für sichtbare Tabs Event-Listener hinzufügen
+        if (trigger.closest('.offers_tabs-collection-item')?.style.display !== 'none') {
+          trigger.addEventListener('click', () => {
+            const tabId = trigger.getAttribute('data-tab');
+            setActiveTab(tabId);
+            initSwiper(tabId);
+          });
+        }
       });
-    });
+    }
   });
   
   
