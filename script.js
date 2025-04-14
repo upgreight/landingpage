@@ -821,6 +821,58 @@ document.addEventListener('topicChange', function(e) {
  * NAV SHOW/HIDE
  *****************************************************************************/
 (function () {
+    /**
+     * Optimierte Throttle-Funktion für Scroll-Events
+     * - Garantiert erste und letzte Ausführung
+     * - Nutzt requestAnimationFrame für Browser-Optimierung
+     * 
+     * @param {Function} fn Auszuführende Funktion
+     * @param {Number} limit Zeit zwischen Aufrufen in ms
+     * @return {Function} Throttled Funktion
+     */
+    function createThrottledFunction(fn, limit = 100) {
+      let lastFunc;
+      let lastRan;
+      let ticking = false;
+      
+      return function() {
+        const context = this;
+        const args = arguments;
+        
+        // rAF für Browser-Optimierung
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(() => {
+            ticking = false;
+          });
+        } else {
+          return;
+        }
+        
+        // Erste Ausführung sofort
+        if (!lastRan) {
+          fn.apply(context, args);
+          lastRan = Date.now();
+          return;
+        }
+        
+        clearTimeout(lastFunc);
+        
+        const delta = Date.now() - lastRan;
+        
+        // Verzögerte oder sofortige Ausführung
+        if (delta < limit) {
+          lastFunc = setTimeout(() => {
+            fn.apply(context, args);
+            lastRan = Date.now();
+          }, limit - delta);
+        } else {
+          fn.apply(context, args);
+          lastRan = Date.now();
+        }
+      };
+    }
+
     // Anfängliches Einblenden der Navbar-Komponente (die im CSS ausgeblendet ist)
     const navbarComponent = document.querySelector(".navbar_component");
     if (navbarComponent) {
@@ -837,18 +889,57 @@ document.addEventListener('topicChange', function(e) {
     const navBg = document.querySelector(".navbar_bg-layer");
     const navMenu = document.querySelector(".navbar_menu");
     const hero = document.querySelector("#hero");
+    
+    // Logo-Elemente für Farbänderung
+    const logoLink = document.querySelector(".navbar_logo-link");
+    const logoElement = document.querySelector(".navbar_logo");
+    const logoSvg = document.querySelector(".navbar_logo-svg");
+    
     if (!navBg || !navMenu || !hero) return;
   
+    // Farbvariable aus dem data-Attribut des Logo-Links auslesen
+    const heroLogoColorAttr = logoLink ? logoLink.getAttribute("data-logo-color-at-hero") : null;
     let navVisible = false;
+    let logoIsCustomColor = false;
+  
+    // Hilfsfunktionen für die Logo-Farbe
+    function setLogoHeroColor() {
+      if (!heroLogoColorAttr || logoIsCustomColor) return;
+      
+      // Wir ändern nur die Farbe der sichtbaren Elemente, nicht des Link-Wrappers
+      // Die vollständige CSS-Variable aus dem Attribut verwenden
+      if (logoElement) {
+        logoElement.style.transition = "color 300ms ease-out"; // Gleiche Transitions wie die Navbar
+        logoElement.style.color = heroLogoColorAttr; // Direkt den Wert verwenden
+      }
+      
+      if (logoSvg) {
+        logoSvg.style.transition = "color 300ms ease-out";
+        logoSvg.style.color = heroLogoColorAttr; // Direkt den Wert verwenden
+      }
+      
+      logoIsCustomColor = true;
+    }
+  
+    function resetLogoColor() {
+      if (!logoIsCustomColor) return;
+      
+      if (logoElement) logoElement.style.color = "";
+      if (logoSvg) logoSvg.style.color = "";
+      
+      logoIsCustomColor = false;
+    }
   
     function showNav() {
       navBg.classList.add('is-active');
       navMenu.classList.add('is-active');
+      resetLogoColor(); // Logo auf Standardfarbe zurücksetzen wenn Nav eingeblendet wird
     }
   
     function hideNav() {
       navBg.classList.remove('is-active');
       navMenu.classList.remove('is-active');
+      setLogoHeroColor(); // Spezielle Hero-Farbe wenn Nav ausgeblendet ist
     }
   
     function checkNavVisibility() {
@@ -865,8 +956,18 @@ document.addEventListener('topicChange', function(e) {
       }
     }
   
-    window.addEventListener("scroll", checkNavVisibility);
-    checkNavVisibility();
+    // Optimierte Scroll-Event-Registrierung mit Throttling (66ms ≈ 15fps)
+    // Dies reduziert die CPU-Last erheblich, ohne wahrnehmbare Verzögerung zu verursachen
+    const throttledCheckNavVisibility = createThrottledFunction(checkNavVisibility, 66);
+    window.addEventListener("scroll", throttledCheckNavVisibility, { passive: true });
+    
+    // Initialisierung
+    checkNavVisibility(); // Hier unthrottled für sofortige initiale Prüfung
+    
+    // Initiale Farbeinstellung für das Logo im Hero-Bereich
+    if (!navVisible && heroLogoColorAttr) {
+      setLogoHeroColor();
+    }
   })();
   
   
@@ -2056,3 +2157,51 @@ document.addEventListener("DOMContentLoaded", function() {
     // z.B. nach Swiper-Initialisierung
     setTimeout(ARIAHelper.initAll.bind(ARIAHelper), 1000);
   });
+
+
+/******************************************************************************
+ * LOCATION DROPDOWN AUTO-OPEN
+ *****************************************************************************/
+document.addEventListener("DOMContentLoaded", function() {
+  // Funktion zum automatischen Öffnen des Location Dropdowns bei Klick auf entsprechende Links
+  function setupLocationDropdownLinks() {
+    // Alle Links mit href="#location" finden
+    const locationLinks = document.querySelectorAll('a[href="#location"]');
+    
+    if (!locationLinks.length) return;
+    
+    // DOM-Referenzen einmalig außerhalb der Event-Handler cachen
+    const locationDropdownCheckbox = document.querySelector('.location_dropdown-checkbox');
+    const contentWrapper = document.querySelector('.location_content-wrapper');
+    let focusableElement = null;
+    
+    // Fokussierbare Elemente vorab finden, falls vorhanden
+    if (contentWrapper) {
+      focusableElement = contentWrapper.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    }
+    
+    if (!locationDropdownCheckbox) return;
+    
+    // Für jeden Link einen Event-Listener hinzufügen
+    locationLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        // Standard-Scroll-Verhalten des Browsers beibehalten
+        // Nach dem Scrollen die Checkbox aktivieren
+        
+        // requestAnimationFrame für flüssigere visuelle Änderungen verwenden
+        requestAnimationFrame(() => {
+          // Checkbox auf checked setzen, um das Dropdown zu öffnen
+          locationDropdownCheckbox.checked = true;
+          
+          // Optional: Fokus auf den Inhalt des Dropdowns setzen für bessere Accessibility
+          if (focusableElement) {
+            focusableElement.focus();
+          }
+        });
+      }, { passive: true }); // Passive Event Listener für bessere Scrolling-Performance
+    });
+  }
+  
+  // Funktion aufrufen
+  setupLocationDropdownLinks();
+});
