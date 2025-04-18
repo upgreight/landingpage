@@ -44,20 +44,21 @@ document.addEventListener('DOMContentLoaded', function() {
   
     function updateNightsDisplay(selectedDates) {
       const nightsEl = document.querySelector('[data-summary-nights]');
-      if (!nightsEl) return;
+      const container = nightsEl ? nightsEl.closest('.form_picker-nights-wrapper') : null;
+      
+      if (!nightsEl || !container) return;
+      
       if (!selectedDates || selectedDates.length < 2) {
-        nightsEl.style.visibility = 'hidden';
+        container.style.visibility = 'hidden';
         return;
       }
+      
       const diff = Math.round((selectedDates[1] - selectedDates[0]) / 86400000);
       const nights = diff < 1 ? 1 : diff;
-      nightsEl.style.visibility = 'visible';
+      container.style.visibility = 'visible';
+      
       const label = (nights === 1) ? "1 Übernachtung" : (nights + " Übernachtungen");
-      if (nightsEl.value !== undefined) {
-        nightsEl.value = label;
-      } else {
-        nightsEl.textContent = label;
-      }
+      nightsEl.textContent = label;
     }
   
     if (window.innerWidth >= 992) {
