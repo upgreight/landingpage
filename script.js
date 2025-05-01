@@ -118,16 +118,12 @@ document.addEventListener('DOMContentLoaded', function() {
           });
   
           function closePopup() {
-            // Erst den Fokus entfernen
             const focusedElement = document.activeElement;
             if (focusedElement && pickerPopup.contains(focusedElement)) {
               focusedElement.blur();
             }
-            
             pickerTrigger.setAttribute("aria-expanded", "false");
             pickerPopup.style.opacity = 0;
-            
-            // Warten auf das Ende der Animation
             setTimeout(() => {
               pickerPopup.style.display = "none";
               pickerPopup.setAttribute("aria-hidden", "true");
@@ -278,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
           updateNightsDisplay(sel);
         }
       };
-
+  
       formDateInstance = flatpickr(formDateEl, {
         ...flatpickrConfig,
         showMonths: window.innerWidth >= 992 ? 2 : 1
@@ -371,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
     })();
   
     (function customValidationSetup() {
-      const myForm = document.querySelector('form');
+      const myForm = document.querySelector('form[data-form-taxi-url]');
       if (!myForm) return;
       function showElement(el, displayType = "block") {
         el.style.display = displayType;
@@ -418,7 +414,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         return { isFormValid, firstErrorElement };
       }
-      myForm.action = "https://form.taxi/s/hao3m8ab";
+      // URL aus data-Attribut ziehen, Fail-Fast wenn fehlt
+      const taxiUrl = myForm.dataset.formTaxiUrl;
+      if (!taxiUrl) {
+        console.error('⚠️ data-form-taxi-url fehlt am <form>!');
+        const errorEl = document.createElement('div');
+        errorEl.className = 'form_error form-taxi-config-error';
+        errorEl.textContent =
+          'Dieses Formular ist nicht richtig konfiguriert. Bitte kontaktieren Sie den Betreiber.';
+        myForm.parentNode.insertBefore(errorEl, myForm);
+        myForm.style.display = 'none';
+        return;
+      }
+      myForm.action = taxiUrl;
       const thankYouURL = window.location.origin + "/danke";
       myForm.addEventListener("submit", function(e) {
         e.preventDefault();
@@ -485,6 +493,7 @@ document.addEventListener('DOMContentLoaded', function() {
     })();
   
   });
+
   
   
 /******************************************************************************
